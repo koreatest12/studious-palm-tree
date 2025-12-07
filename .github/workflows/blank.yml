@@ -1,0 +1,49 @@
+name: 🛡️ Daily Security Engineer Study Generator
+
+on:
+  schedule:
+    # 매일 한국 시간 오전 09:00 실행 (UTC 00:00)
+    - cron: '0 0 * * *'
+  workflow_dispatch: # 수동 실행 가능
+
+permissions:
+  contents: write
+
+jobs:
+  generate-study-log:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: 📂 Create Posts Directory
+        run: mkdir -p _posts
+
+      - name: 🧠 Generate Study Content
+        run: |
+          python study_generator.py
+
+      - name: 🔍 Check Generated File
+        run: |
+          ls -R _posts
+          cat _posts/$(date +%Y-%m-%d)-security-study.md
+
+      - name: 🚀 Commit and Push
+        run: |
+          git config --global user.name "Security-Bot"
+          git config --global user.email "bot@github.com"
+          git add _posts/*.md
+          
+          # 변동 사항이 있을 때만 커밋
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "📚 Daily Security Study Log: $(date +%Y-%m-%d)"
+            git push
+          fi
