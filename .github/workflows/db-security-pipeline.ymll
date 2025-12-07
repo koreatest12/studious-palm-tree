@@ -1,0 +1,62 @@
+name: 🔐 Database Security & DLP Pipeline
+
+on:
+  push:
+    paths:
+      - '**.py'
+      - '**.yml'
+  workflow_dispatch:
+
+jobs:
+  secure-db-lifecycle:
+    runs-on: ubuntu-latest
+    
+    # [중요] GitHub Actions 내에 격리된 PostgreSQL 컨테이너 생성
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: testdb
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        # DB가 준비될 때까지 대기하는 헬스체크
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: 📥 소스코드 체크아웃
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 전체 히스토리 가져오기 (DLP 스캔용)
+
+      # ==========================================
+      # [DLP: 외부 유출 방지 프로그램 (Gitleaks)]
+      # ==========================================
+      - name: 🚨 Gitleaks Secret Scanner
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: false # 비밀번호 발견 시 즉시 워크플로우 중단
+
+      - name: 🐍 Python 환경 설정
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: 📦 보안/DB 라이브러리 설치
+        run: |
+          pip install psycopg2-binary cryptography
+
+      - name: 🛡️ 보안 DB 스크립트 실행 (Table/Query/Encrypt)
+        env:
+          # 실제 환경변수는 GitHub Secrets에서 관리해야 함
+          DB_HOST: localhost
+          DB_USER: postgres
+          DB_PASS: password
+        run: |
+          python secure_db_ops.py
