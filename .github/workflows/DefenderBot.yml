@@ -2,8 +2,8 @@ name: 🤖 Defender Bot - Auto Monitor & Merge
 
 on:
   schedule:
-    - cron: '0 */6 * * *' # 6시간마다 실행 (하루 4번)
-  workflow_dispatch:      # 수동 실행 버튼
+    - cron: '0 */4 * * *' # 4시간마다 실행 (빈도 증가)
+  workflow_dispatch:      # 수동 실행
 
 permissions:
   contents: write
@@ -24,7 +24,8 @@ jobs:
 
       - name: 📦 Install Dependencies
         run: |
-          pip install feedparser
+          # requests 추가 (헤더 조작용), feedparser
+          pip install feedparser requests
 
       - name: 🕵️ Run Defender Bot (Fetch News)
         run: |
@@ -36,7 +37,13 @@ jobs:
           git config --global user.name "Defender-Bot"
           git config --global user.email "defender@bot.com"
           
-          git add SECURITY_TRENDS.md README.md
+          # 파일이 존재하는지 확인 후 add
+          if [ -f SECURITY_TRENDS.md ]; then
+            git add SECURITY_TRENDS.md
+          else
+            echo "SECURITY_TRENDS.md not found!"
+            exit 1
+          fi
           
           # 변경 사항이 있는지 확인
           if git diff --staged --quiet; then
@@ -52,17 +59,16 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # 현재 날짜로 브랜치 생성
           BRANCH_NAME="security-update-$(date +%s)"
           git checkout -b $BRANCH_NAME
           git push origin $BRANCH_NAME
           
-          # PR 생성
+          # PR 생성 (에러 발생 시 무시하고 계속 진행하도록 || true 추가)
           gh pr create \
             --title "🚨 [Defender Bot] Security Trends Update" \
-            --body "디펜더 봇이 최신 보안 위협 정보를 감지하여 업데이트했습니다." \
+            --body "디펜더 봇이 최신 보안 위협(CISA, HackerNews 등) 정보를 감지하여 업데이트했습니다." \
             --base main \
-            --head $BRANCH_NAME
+            --head $BRANCH_NAME || true
           
-          # PR 자동 병합 (Auto-merge)
-          gh pr merge --auto --merge --delete-branch
+          # PR 자동 병합
+          gh pr merge --auto --merge --delete-branch || echo "Merge skipped or manual intervention required."
