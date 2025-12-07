@@ -1,0 +1,68 @@
+name: 🤖 Defender Bot - Auto Monitor & Merge
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # 6시간마다 실행 (하루 4번)
+  workflow_dispatch:      # 수동 실행 버튼
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  defender-action:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: 📦 Install Dependencies
+        run: |
+          pip install feedparser
+
+      - name: 🕵️ Run Defender Bot (Fetch News)
+        run: |
+          python defender_bot.py
+
+      - name: 🤖 Check & Commit Changes
+        id: commit_step
+        run: |
+          git config --global user.name "Defender-Bot"
+          git config --global user.email "defender@bot.com"
+          
+          git add SECURITY_TRENDS.md README.md
+          
+          # 변경 사항이 있는지 확인
+          if git diff --staged --quiet; then
+            echo "No security updates found."
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            git commit -m "🚨 Security Intel Update: $(date +%Y-%m-%d)"
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🔀 Create Pull Request & Auto Merge
+        if: steps.commit_step.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 현재 날짜로 브랜치 생성
+          BRANCH_NAME="security-update-$(date +%s)"
+          git checkout -b $BRANCH_NAME
+          git push origin $BRANCH_NAME
+          
+          # PR 생성
+          gh pr create \
+            --title "🚨 [Defender Bot] Security Trends Update" \
+            --body "디펜더 봇이 최신 보안 위협 정보를 감지하여 업데이트했습니다." \
+            --base main \
+            --head $BRANCH_NAME
+          
+          # PR 자동 병합 (Auto-merge)
+          gh pr merge --auto --merge --delete-branch
