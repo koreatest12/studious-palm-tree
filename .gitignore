@@ -1,14 +1,14 @@
-*.tar
-*.tar.*
-*.jar
-*.exe
-*.msi
-*.deb
-*.zip
-*.tgz
+# Database
+*.db
+*.sqlite3
 *.log
-*.log.*
-*.sig
 
-pkg/
-src/
+# Python
+__pycache__/
+*.pyc
+
+# Environment & Secrets (외부유출 절대 금지)
+.env
+config.py
+secrets.json
+key.pem
