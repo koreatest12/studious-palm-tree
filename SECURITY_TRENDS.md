@@ -1,0 +1,27 @@
+# 🚨 Real-time Security Threat Intelligence
+> **Defender Bot Status**: 🟢 Online & Monitoring  
+> **Last Updated**: 2026-06-10 20:50:43
+
+이 페이지는 **Defender Bot**이 전 세계 주요 보안 피드(CISA, HackerNews 등)를 실시간 모니터링하여 자동 생성합니다.
+
+---
+
+## ⚡ Global Security Alerts
+
+### 🔥 The Hacker News
+- **[Wed, 10 Jun 2026]** [China-Linked JDY Botnet Expands to 1,500+ Devices for Cyber Reconnaissance](https://thehackernews.com/2026/06/china-linked-jdy-botnet-expands-to-1500.html)
+- **[Wed, 10 Jun 2026]** [Ivanti, Fortinet, and SAP Release Patches for Multiple Critical Vulnerabilities](https://thehackernews.com/2026/06/ivanti-fortinet-and-sap-release-patches.html)
+- **[Wed, 10 Jun 2026]** [Unpatched Langflow Flaw CVE-2026-5027 Exploited for Unauthenticated RCE](https://thehackernews.com/2026/06/unpatched-langflow-flaw-cve-2026-5027.html)
+
+### ⚠️ ThreatPost
+- **[Wed, 31 Aug 2022]** [Student Loan Breach Exposes 2.5M Records](https://threatpost.com/student-loan-breach-exposes-2-5m-records/180492/)
+- **[Tue, 30 Aug 2022]** [Watering Hole Attacks Push ScanBox Keylogger](https://threatpost.com/watering-hole-attacks-push-scanbox-keylogger/180490/)
+- **[Mon, 29 Aug 2022]** [Tentacles of ‘0ktapus’ Threat Group Victimize 130 Firms](https://threatpost.com/0ktapus-victimize-130-firms/180487/)
+
+---
+## 🤖 Bot Logic
+1. **Monitor**: CISA, NIST, ThreatPost RSS Feeds.
+2. **Analyze**: Parse latest 3 critical items per source.
+3. **Report**: Auto-commit & Merge to Repository.
+
+_Automated by GitHub Actions & Python_
